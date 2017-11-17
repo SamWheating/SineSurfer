@@ -2,6 +2,11 @@
 
 SineSurfer!
 
+SineSurferOnline.py:
+
+Client-side script for running the game. 
+Will interact with SineServer.py.
+
 ---------
 
 Game made for CENG356 - Engineering System Software
@@ -27,6 +32,7 @@ screen = pygame.display.set_mode((1000, 600))
 clock = pygame.time.Clock()
 font = pygame.font.SysFont("comicsansms", 40)
 TWO_PLAYER = True
+SERVER_PORT = 9000
 
 #-------------------------------------------
 
@@ -48,7 +54,7 @@ class BallSprite(pygame.sprite.Sprite):
 		self.path = [(296, 352), (292, 356)]
 
 	def update(self, deltat, screen, number):				# Calculate new position of the ball
-#		print(self.path)
+		print(self.path)
 		x, y = self.position
 		self.speed += (self.k_up + self.k_down)
 		if y > 300:
