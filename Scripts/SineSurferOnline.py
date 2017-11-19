@@ -94,35 +94,9 @@ class BallSprite(pygame.sprite.Sprite):
 		if len(self.path) > 75:
 			del self.path[0]		# trim path array.
 
-		if online_pos is None: s.send(str(y).encode('utf-8'))
+		if online_pos is None: conn.send(str(y).encode('utf-8'))   # Broken Pipe Error occurs here.
 
-		# Send position to server
-
-"""
-
-	def update_online(self, deltat, screen, number, online_pos):
-
-		x, y = self.position
-		self.position = (x, online_pos)
-
-		pygame.draw.lines(screen, ((math.cos(math.radians(number / 2)) * 122) + 122, 255,(math.cos(math.radians(number / 6)) * 122) + 122), False, self.path, 3)  
-
-		for i,e in enumerate(self.path):		# move each point in path array back.
-			a = self.path[i][0]
-			b = self.path[i][1]
-			a -= 4
-			self.path[i] = (a, b)
-
-		self.path.append(tuple([x, y]))		# add current position to path array		
-#		self.rect = self.image.get_rect()
-		self.rect.center = self.position	
-
-		if len(self.path) > 75:
-			del self.path[0]		# trim path array.
-
-		# the same as self.update but takes input from server.
-
-"""			
+		# Send position to server		
 			
 		
 class BarSprite(pygame.sprite.Sprite):			# obstacles.
@@ -158,8 +132,6 @@ class BarSprite(pygame.sprite.Sprite):			# obstacles.
 
 def start_game():
 
-	# Start connection to server
-
 	# recieve random seed from server
 
 	while(True):
@@ -193,6 +165,8 @@ def start_game():
 
 	ball = BallSprite('sprites/ball.png', (300, 350))
 
+	# make separate group for player 2 so they can be updated separately.
+
 	if TWO_PLAYER: 
 		ball2 = BallSprite('sprites/ball2.png', (300, 350))
 
@@ -206,7 +180,7 @@ def start_game():
 	time = 0
 	game_over = False
 
-	# 3-2-1 countdown sequence.
+	# 3-2-1 countdown sequence. ------------------ ---------
 
 	while(True):
 
@@ -229,23 +203,20 @@ def start_game():
 		
 	print("finished countdown")
 
+	# End countdown, enter gameplay loop ---------------------
+
 	# Repeating game loop
 
 	while True:
 
 		deltat = clock.tick(30)
 
-		print("ye")
+		# get player 2's position.
 
 		try:
-			print("ye1")
 			y_coord = int(s.recv(4096))
-			print("ye3")
 		except:
-			print("ye2")
-			y_coord = 9000
-
-		print(y_coord)
+			y_coord = 9000    # ignore value used as in if y_coord == 9000: ignore. 
 
 
 		for event in pygame.event.get():
