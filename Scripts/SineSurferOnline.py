@@ -19,8 +19,9 @@ import pygame
 import math
 import sys
 import random
-import socket
+from socket import *
 from pygame.locals import *
+from time import *
 
 # Start Pygame instance
 pygame.init()
@@ -36,7 +37,8 @@ SERVER_PORT = 9000
 
 #-------------------------------------------
 
-random.seed()
+s = socket(AF_INET, SOCK_STREAM)
+s.connect(("", SERVER_PORT))
 
 # Class Definitions -------------------------------------------
 
@@ -53,19 +55,26 @@ class BallSprite(pygame.sprite.Sprite):
 		self.k_up = self.k_down = self.k_left = self.k_right =  0
 		self.path = [(296, 352), (292, 356)]
 
-	def update(self, deltat, screen, number):				# Calculate new position of the ball
-		print(self.path)
+	def update(self, deltat, screen, number, online_pos=None):				# Calculate new position of the ball
+#		print(self.path)
+
 		x, y = self.position
-		self.speed += (self.k_up + self.k_down)
-		if y > 300:
-			self.speed -= 2
-		elif y <= 300:
-			self.speed += 2
-		if self.speed < -23:
-			self.speed = -23
-		elif self.speed > 23:
-			self.speed = 23
-		y += self.speed
+
+		if online_pos != None:
+			y = online_pos
+
+		else:
+			x, y = self.position
+			self.speed += (self.k_up + self.k_down)
+			if y > 300:
+				self.speed -= 2
+			elif y <= 300:
+				self.speed += 2
+			if self.speed < -23:
+				self.speed = -23
+			elif self.speed > 23:
+				self.speed = 23
+			y += self.speed
 		
 #		print((math.cos(math.radians(number))) * 122 + 122)
 
@@ -85,7 +94,35 @@ class BallSprite(pygame.sprite.Sprite):
 		if len(self.path) > 75:
 			del self.path[0]		# trim path array.
 
-			
+		if online_pos is None: s.send(str(y).encode('utf-8'))
+
+		# Send position to server
+
+"""
+
+	def update_online(self, deltat, screen, number, online_pos):
+
+		x, y = self.position
+		self.position = (x, online_pos)
+
+		pygame.draw.lines(screen, ((math.cos(math.radians(number / 2)) * 122) + 122, 255,(math.cos(math.radians(number / 6)) * 122) + 122), False, self.path, 3)  
+
+		for i,e in enumerate(self.path):		# move each point in path array back.
+			a = self.path[i][0]
+			b = self.path[i][1]
+			a -= 4
+			self.path[i] = (a, b)
+
+		self.path.append(tuple([x, y]))		# add current position to path array		
+#		self.rect = self.image.get_rect()
+		self.rect.center = self.position	
+
+		if len(self.path) > 75:
+			del self.path[0]		# trim path array.
+
+		# the same as self.update but takes input from server.
+
+"""			
 			
 		
 class BarSprite(pygame.sprite.Sprite):			# obstacles.
@@ -121,6 +158,24 @@ class BarSprite(pygame.sprite.Sprite):			# obstacles.
 
 def start_game():
 
+	# Start connection to server
+
+	# recieve random seed from server
+
+	while(True):
+		seed = s.recv(4096)
+		print(seed)
+		try:
+			if int(seed) > 0: break
+		except:
+			pass
+
+	print("recieved seed {}".format(int(seed)))
+
+	# Seed RNG
+
+	random.seed(int(seed))
+
 	# Initialize game state with bar positions
 	
 	bars = [
@@ -141,7 +196,8 @@ def start_game():
 	if TWO_PLAYER: 
 		ball2 = BallSprite('sprites/ball2.png', (300, 350))
 
-	ball_group = pygame.sprite.RenderPlain(ball, ball2)
+	ball_group = pygame.sprite.RenderPlain(ball)
+	ball2_group = pygame.sprite.RenderPlain(ball2)
 	background = pygame.image.load('sprites/background.png')
 	screen.blit(background, (0,0))
 
@@ -149,13 +205,47 @@ def start_game():
 	score = 0
 	time = 0
 	game_over = False
+
+	# 3-2-1 countdown sequence.
+
+	while(True):
+
+		try: 
+			count = int(s.recv(4096))
+		except:
+			count = 4
 		
+		if((count != 0) & (count < 4)): 
+			print(count)
+			text = font.render(str(count), True, (255, 255, 255))	# place text on screen	
+			screen.blit(background, (0,0))
+			screen.blit(text, (320, 300))
+			pygame.display.flip()
+
+		if(count == 1):
+			sleep(1)
+			break			
+
+		
+	print("finished countdown")
+
 	# Repeating game loop
 
 	while True:
 
 		deltat = clock.tick(30)
 
+		print("ye")
+
+		try:
+			print("ye1")
+			y_coord = int(s.recv(4096))
+			print("ye3")
+		except:
+			print("ye2")
+			y_coord = 9000
+
+		print(y_coord)
 
 
 		for event in pygame.event.get():
@@ -192,6 +282,7 @@ def start_game():
 		screen.blit(background, (0,0))					    # clear screen
 		
 		ball_group.update(deltat, screen, time)				#  Update ball positions
+		ball2_group.update(deltat, screen, time, y_coord)
 		bar_group.draw(screen)								# render bars
 		ball_group.draw(screen)								# render balls
 		screen.blit(text, (20, 540))
