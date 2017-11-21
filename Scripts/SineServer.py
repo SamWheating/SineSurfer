@@ -27,7 +27,7 @@ While(at least one player lives):
 	Trade location data for P1 and P2. (y coord and t)						yes.
 
 Once both players have lost:
-	Send message ((PLayer x won!))											no.	
+	Send message ((PLayer x won!))											yes.
 
 -------------
 
@@ -97,10 +97,10 @@ sleep(0.5)
 
 print("Sending game start signal")
 
-for i in range(3):
-	player1.send(str(3-i).encode('utf-8'))
-	if not ONEPLAYER: player2.send(str(3-i).encode('utf-8'))
-	sleep(0.1)
+for i in range(5):
+	player1.send(str(5-i).encode('utf-8'))
+	if not ONEPLAYER: player2.send(str(5-i).encode('utf-8'))
+	sleep(1)
 
 print("starting game")
 

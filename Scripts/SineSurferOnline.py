@@ -13,6 +13,15 @@ Game made for CENG356 - Engineering System Software
 Uses Pygame fo rgame logic + rendering, sockets for network communications.
 Launch SineServer.py before launching instances of SineSurfer.py
 
+--------
+
+To do: (optional)
+
+Ping server to account for latency in local ball2 position
+new graphics?
+Tkinter GUI for hosting / joining game sessions
+Gracefully exit game / r to restart?
+
 """
 
 import pygame
@@ -81,7 +90,8 @@ class BallSprite(pygame.sprite.Sprite):
 			y += self.speed
 
 		# Draw trace of player's position history:
-		pygame.draw.lines(screen, ((math.cos(math.radians(number / 2)) * 122) + 122, 255,(math.cos(math.radians(number / 6)) * 122) + 122), False, self.path, 3)  
+		if self.alive():
+			pygame.draw.lines(screen, ((math.cos(math.radians(number / 2)) * 122) + 122, 255,(math.cos(math.radians(number / 6)) * 122) + 122), False, self.path, 3)  
 			
 		for i,e in enumerate(self.path):		# move each point in path array back.
 			a = self.path[i][0]
@@ -114,7 +124,7 @@ class BarSprite(pygame.sprite.Sprite):			# obstacles.
 
 	def update(self, hits):
 		x, y = self.position
-		x -= 2						# this should be changed to 4 once update is called once / frame.
+		x -= 4						# this should be changed to 4 once update is called once / frame.
 		if x < -100:
 			x = 1100
 			y = random.randint(80, 600)
@@ -171,10 +181,9 @@ def start_game():
 	# make separate group for player 2 so they can be updated separately.
 
 	if TWO_PLAYER: 
-		ball2 = BallSprite('sprites/ball2.png', (300, 330))
+		ball2 = BallSprite('sprites/ball2.png', (300, 350))  # TO DO: make x coord proportional to ping / latency
 
-	ball_group = pygame.sprite.RenderPlain(ball)
-	ball2_group = pygame.sprite.RenderPlain(ball2)
+	ball_group = pygame.sprite.RenderPlain(ball, ball2)
 	background = pygame.image.load('sprites/background.png')
 	screen.blit(background, (0,0))
 
@@ -192,7 +201,7 @@ def start_game():
 		except:
 			count = 4
 		
-		if((count != 0) & (count < 4)): 
+		if((count != 0) & (count < 6)): 
 			print(count)
 			text = font.render(str(count), True, (255, 255, 255))	# place text on screen	
 			screen.blit(background, (0,0))
@@ -210,6 +219,8 @@ def start_game():
 	# End countdown, enter gameplay loop ---------------------
 
 	# Repeating game loop
+
+	winner = 0 # Variable used for keeping track of first player to lose.
 
 	while True:
 
@@ -240,39 +251,49 @@ def start_game():
 			
 		if not first_frame:																	# Mystery bug
 			hits = pygame.sprite.groupcollide(bar_group, ball_group, False, True)
-			hits2 = pygame.sprite.groupcollide(bar_group, ball2_group, False, True)			
 		else: 
-			hits = ()
-			hits2 = ()	
-											# TO FIX: ----------------------------
-		bar_group.update(hits)				# this is really bad for performance. 
-		bar_group.update(hits2)				# find a way to combine hits and hits2 then call update once,
+			hits = ()	
+											
+		bar_group.update(hits)			 
 
 		if bool(ball_group): time += 1  # If at least one ball is still in play
 		score =  (time - 170) / 50		# Calculating score based on time  
 		if score < 0: score = 0			# score can't be negative
 		
+		if ball.alive() and not ball2.alive() and winner == 0:
+			winner = 1
+
+		if ball2.alive() and not ball.alive() and winner == 0:
+			winner = 2		
+
+
 		if bool(ball_group):
 			score = ("Score: %.0f" % score)
 		else:
-			score = ("Game over!   Final Score = %.0f        Press R to Restart" % score)
+			if winner == 1:
+				score = ("You Win!   Final Score = %.0f        Press R to Restart" % score)
+			elif winner == 2:
+				score = ("You Lose!   Final Score = %.0f        Press R to Restart" % score)
 			
 		text = font.render(score, True, (255, 255, 255))	# place text on screen	
 		screen.blit(background, (0,0))					    # clear screen
 
-		if bool(ball_group):								# update only if the player still exists
-			ball_group.update(deltat, screen, time)
+		if bool(ball):								# update only if the player still exists
+			ball.update(deltat, screen, time)
+#			ball.draw(screen)
 
-		if  bool(ball2_group):								#  Update ball if player 2 is not dead
-			ball2_group.update(deltat, screen, time, y_coord)
+		if  bool(ball2):								#  Update ball if player 2 is not dead
+			ball2.update(deltat, screen, time, y_coord)
+#			ball2.draw()
 
 		bar_group.draw(screen)								# render bars
 		ball_group.draw(screen)	
-		ball2_group.draw(screen)							# render balls
+#		ball2_group.draw(screen)							# render balls
 		screen.blit(text, (20, 540))
 		pygame.display.flip()								# this is necessary otherwise nothing displays
 
 		first_frame = False
+
 
 		
 start_game()	
