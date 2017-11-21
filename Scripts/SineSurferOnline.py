@@ -60,7 +60,6 @@ class BallSprite(pygame.sprite.Sprite):
 		self.path = [(296, 352), (292, 356)]
 
 	def update(self, deltat, screen, number, online_pos=None):				# Calculate new position of the ball
-#		print(self.path)
 
 		x, y = self.position
 
@@ -80,10 +79,8 @@ class BallSprite(pygame.sprite.Sprite):
 			elif self.speed > 23:
 				self.speed = 23
 			y += self.speed
-		
-#		print((math.cos(math.radians(number))) * 122 + 122)
 
-		# Draw trace of player's position history
+		# Draw trace of player's position history:
 		pygame.draw.lines(screen, ((math.cos(math.radians(number / 2)) * 122) + 122, 255,(math.cos(math.radians(number / 6)) * 122) + 122), False, self.path, 3)  
 			
 		for i,e in enumerate(self.path):		# move each point in path array back.
@@ -100,10 +97,9 @@ class BallSprite(pygame.sprite.Sprite):
 		if len(self.path) > 75:
 			del self.path[0]		# trim path array.
 
+		# Send position to server	
 		if (online_pos is None): 
-			s.send(str(y).encode('utf-8'))   # Broken Pipe Error occurs here.
-
-		# Send position to server		
+			s.send(str(y).encode('utf-8'))  	
 			
 		
 class BarSprite(pygame.sprite.Sprite):			# obstacles.
@@ -118,7 +114,7 @@ class BarSprite(pygame.sprite.Sprite):			# obstacles.
 
 	def update(self, hits):
 		x, y = self.position
-		x -= 4
+		x -= 2						# this should be changed to 4 once update is called once / frame.
 		if x < -100:
 			x = 1100
 			y = random.randint(80, 600)
@@ -175,7 +171,7 @@ def start_game():
 	# make separate group for player 2 so they can be updated separately.
 
 	if TWO_PLAYER: 
-		ball2 = BallSprite('sprites/ball2.png', (300, 350))
+		ball2 = BallSprite('sprites/ball2.png', (300, 330))
 
 	ball_group = pygame.sprite.RenderPlain(ball)
 	ball2_group = pygame.sprite.RenderPlain(ball2)
@@ -207,7 +203,7 @@ def start_game():
 			sleep(1)
 			break			
 
-	s.setblocking(0)
+	s.setblocking(0)		# Set socket to non-blocking (can return nothing)
 		
 	print("finished countdown")
 
@@ -238,15 +234,19 @@ def start_game():
 			if event.key == K_UP: ball.k_up = down * -1
 			elif event.key == K_DOWN: ball.k_down = down * 1		
 			elif event.key == K_ESCAPE: 
-			#	highscores.save()
+
 				sys.exit()
 			elif event.key == K_r: start_game()
 			
 		if not first_frame:																	# Mystery bug
-			hits = pygame.sprite.groupcollide(bar_group, ball_group, False, True)			
-		else: hits = ()	
-
-		bar_group.update(hits)
+			hits = pygame.sprite.groupcollide(bar_group, ball_group, False, True)
+			hits2 = pygame.sprite.groupcollide(bar_group, ball2_group, False, True)			
+		else: 
+			hits = ()
+			hits2 = ()	
+											# TO FIX: ----------------------------
+		bar_group.update(hits)				# this is really bad for performance. 
+		bar_group.update(hits2)				# find a way to combine hits and hits2 then call update once,
 
 		if bool(ball_group): time += 1  # If at least one ball is still in play
 		score =  (time - 170) / 50		# Calculating score based on time  
@@ -267,7 +267,8 @@ def start_game():
 			ball2_group.update(deltat, screen, time, y_coord)
 
 		bar_group.draw(screen)								# render bars
-		ball_group.draw(screen)								# render balls
+		ball_group.draw(screen)	
+		ball2_group.draw(screen)							# render balls
 		screen.blit(text, (20, 540))
 		pygame.display.flip()								# this is necessary otherwise nothing displays
 

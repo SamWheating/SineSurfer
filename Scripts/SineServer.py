@@ -100,7 +100,7 @@ print("Sending game start signal")
 for i in range(3):
 	player1.send(str(3-i).encode('utf-8'))
 	if not ONEPLAYER: player2.send(str(3-i).encode('utf-8'))
-	sleep(1)
+	sleep(0.1)
 
 print("starting game")
 
@@ -108,8 +108,7 @@ print("starting game")
 # GAME STATE LOOP ---------------------------------------------
 # listen for messages from either player and sends their location to the other player.
 
-sleep(1)
-s.setblocking(0)
+s.setblocking(0)  		# Set socket to non-blocking
 
 while(True):
 
