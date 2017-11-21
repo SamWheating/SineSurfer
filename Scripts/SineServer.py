@@ -24,7 +24,7 @@ Provide identical seed for random generation of obstacle positions.			yes.
 When both seed reciepts confirmed give 3s countdown to start of game.		yes.
 
 While(at least one player lives):
-	Trade location data for P1 and P2. (y coord and t)						no.
+	Trade location data for P1 and P2. (y coord and t)						yes.
 
 Once both players have lost:
 	Send message ((PLayer x won!))											no.	
@@ -46,8 +46,7 @@ import random
 
 # Control Variables
 SERVER_PORT = 9000
-ONEPLAYER = True
-
+ONEPLAYER = False
 
 random.seed()
 
@@ -90,8 +89,9 @@ seed = random.randrange(10000)				# Generate seed to send to client-side RNG
 print("sending random seed {}".format(seed))
 
 player1.send(str(seed).encode('utf-8'))
+sleep(0.5)
 if not ONEPLAYER: player2.send(str(seed).encode('utf-8'))
-
+sleep(0.5)
 
 # Sending countdown to clients ---------------------------------
 
@@ -109,10 +109,16 @@ print("starting game")
 # listen for messages from either player and sends their location to the other player.
 
 sleep(1)
+s.setblocking(0)
 
 while(True):
-	p1_pos = player1.recv(4096)
-	p2_pos = player2.recv(4096)
+
+	try:
+		p1_pos = player1.recv(4096)
+	except: pass
+	try:
+		p2_pos = player2.recv(4096)
+	except: pass
 
 	# Get player positions
 
@@ -131,10 +137,10 @@ while(True):
 	# Send player positions if valid.
 
 	if(p1_pos != 9000):
-		player2.send(p1_pos)
+		player2.send(str(p1_pos).encode('utf-8'))
 
-	if((p2_pos != 9000) & (not ONEPLAYER)):
-		player1.send(p2_pos)
+	if((p2_pos != 9000) and (not ONEPLAYER)):
+		player1.send(str(p2_pos).encode('utf-8'))
 
 
 

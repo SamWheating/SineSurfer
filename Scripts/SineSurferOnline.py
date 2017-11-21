@@ -35,7 +35,11 @@ font = pygame.font.SysFont("comicsansms", 40)
 TWO_PLAYER = True
 SERVER_PORT = 9000
 
+#framecount = 0
+
 #-------------------------------------------
+
+
 
 s = socket(AF_INET, SOCK_STREAM)
 s.connect(("", SERVER_PORT))
@@ -60,9 +64,10 @@ class BallSprite(pygame.sprite.Sprite):
 
 		x, y = self.position
 
-		if online_pos != None:
-			y = online_pos
-
+		if(online_pos != None):
+			if(math.fabs(online_pos) < 9000): 		# filter erroneous positions, will maintain previous value of y
+				y = online_pos
+		
 		else:
 			x, y = self.position
 			self.speed += (self.k_up + self.k_down)
@@ -86,15 +91,17 @@ class BallSprite(pygame.sprite.Sprite):
 			b = self.path[i][1]
 			a -= 4
 			self.path[i] = (a, b)
-			
+
 		self.position = (x, y)						
 		self.path.append(tuple([x, y]))		# add current position to path array		
-#		self.rect = self.image.get_rect()
-		self.rect.center = self.position		
+		self.rect = self.image.get_rect()
+		if(y < 9000):				# DEBUG
+			self.rect.center = (x,y)		
 		if len(self.path) > 75:
 			del self.path[0]		# trim path array.
 
-		if online_pos is None: conn.send(str(y).encode('utf-8'))   # Broken Pipe Error occurs here.
+		if (online_pos is None): 
+			s.send(str(y).encode('utf-8'))   # Broken Pipe Error occurs here.
 
 		# Send position to server		
 			
@@ -200,6 +207,7 @@ def start_game():
 			sleep(1)
 			break			
 
+	s.setblocking(0)
 		
 	print("finished countdown")
 
@@ -251,9 +259,13 @@ def start_game():
 			
 		text = font.render(score, True, (255, 255, 255))	# place text on screen	
 		screen.blit(background, (0,0))					    # clear screen
-		
-		ball_group.update(deltat, screen, time)				#  Update ball positions
-		ball2_group.update(deltat, screen, time, y_coord)
+
+		if bool(ball_group):								# update only if the player still exists
+			ball_group.update(deltat, screen, time)
+
+		if  bool(ball2_group):								#  Update ball if player 2 is not dead
+			ball2_group.update(deltat, screen, time, y_coord)
+
 		bar_group.draw(screen)								# render bars
 		ball_group.draw(screen)								# render balls
 		screen.blit(text, (20, 540))
