@@ -69,17 +69,49 @@ while(True):
 		print("Player 1 connected from port ", str(a1))
 		break		
 
-if not ONEPLAYER:
 
-	print("Searching for player 2")
+print("Searching for player 2")
 
-	while(True):
-		player2, a2 = s.accept()									# Returns a socket object player2 and a socket adress a2
-		if a2 != a1: 												# only stop when two unique sockets are obtained
-			print("Player 2 connected from port ", str(a2))
-			break
+while(True):
+	player2, a2 = s.accept()									# Returns a socket object player2 and a socket adress a2
+	if a2 != a1: 												# only stop when two unique sockets are obtained
+		print("Player 2 connected from port ", str(a2))
+		break
 
-	print("connected to two sockets")
+print("connected to two sockets")
+
+""" Measuring latency: ----------------------
+
+Ping recieved from client, immeadiately replied.
+Measure on client side to approximate p2 position delay.
+
+"""
+
+print("measuring latency (ms)")
+
+num_pings = 0
+
+s.setblocking(0) 
+
+while(True):
+	p1_message = player1.recv(4096)
+	p2_message = player2.recv(4096)
+
+	if len(str(p1_message)) > 10 is not None:
+			player1.send(("Ping response").encode('utf-8'))
+			num_pings += 1
+
+	if len((p2_message)) > 10:
+			player2.send(("Ping response").encode('utf-8'))
+			num_pings += 1
+
+	if num_pings == 2: break
+
+
+s.setblocking(1)
+
+sleep(1)
+
 
 
 # Seeding random number generators -----------------------------
@@ -90,7 +122,7 @@ print("sending random seed {}".format(seed))
 
 player1.send(str(seed).encode('utf-8'))
 sleep(0.5)
-if not ONEPLAYER: player2.send(str(seed).encode('utf-8'))
+player2.send(str(seed).encode('utf-8'))
 sleep(0.5)
 
 # Sending countdown to clients ---------------------------------
@@ -99,7 +131,7 @@ print("Sending game start signal")
 
 for i in range(5):
 	player1.send(str(5-i).encode('utf-8'))
-	if not ONEPLAYER: player2.send(str(5-i).encode('utf-8'))
+	player2.send(str(5-i).encode('utf-8'))
 	sleep(1)
 
 print("starting game")
@@ -127,23 +159,22 @@ while(True):
 	except:
 		p1_pos = 9000
 
-	if not ONEPLAYER:
-		try: 
-			p2_pos = int(p2_pos)
-		except:
-			p2_pos = 9000			# ignore value
+	try: 
+		p2_pos = int(p2_pos)
+	except:
+		p2_pos = 9000			# ignore value
 
 	# Send player positions if valid.
 
 	if(p1_pos != 9000):
 		player2.send(str(p1_pos).encode('utf-8'))
 
-	if((p2_pos != 9000) and (not ONEPLAYER)):
+	if(p2_pos != 9000):
 		player1.send(str(p2_pos).encode('utf-8'))
 
 
 
 player1.close()
-if not ONEPLAYER: player2.close()
+player2.close()
 
 print("closed sockets")

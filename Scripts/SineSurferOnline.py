@@ -41,7 +41,6 @@ pygame.init()
 screen = pygame.display.set_mode((1000, 600))
 clock = pygame.time.Clock()
 font = pygame.font.SysFont("comicsansms", 40)
-TWO_PLAYER = True
 SERVER_PORT = 9000
 
 #framecount = 0
@@ -49,9 +48,9 @@ SERVER_PORT = 9000
 #-------------------------------------------
 
 
-
 s = socket(AF_INET, SOCK_STREAM)
 s.connect(("", SERVER_PORT))
+
 
 # Class Definitions -------------------------------------------
 
@@ -145,8 +144,30 @@ class BarSprite(pygame.sprite.Sprite):			# obstacles.
 
 def start_game():
 
-	# recieve random seed from server
+	
+	# Latency measurement: --------------------- ping and wait for reply
+	s.setblocking(0)
+	sleep(5)
+	start_time = time()
+	s.send(("Ping requested").encode('utf-8'))  
+	while(True):
 
+		try:
+			reply = s.recv(4096)
+		except:
+			reply = " "
+
+		if len(str(reply)) > 10:
+			end_time = time()
+			break
+
+	s.setblocking(1)
+
+	ping = end_time - start_time
+
+	print("Ping is {}ms".format(ping))
+
+	
 	while(True):
 		seed = s.recv(4096)
 		print(seed)
@@ -180,8 +201,7 @@ def start_game():
 
 	# make separate group for player 2 so they can be updated separately.
 
-	if TWO_PLAYER: 
-		ball2 = BallSprite('sprites/ball2.png', (300, 350))  # TO DO: make x coord proportional to ping / latency
+	ball2 = BallSprite('sprites/ball2.png', (300, 350))  # TO DO: make x coord proportional to ping / latency
 
 	ball_group = pygame.sprite.RenderPlain(ball, ball2)
 	background = pygame.image.load('sprites/background.png')
@@ -189,7 +209,7 @@ def start_game():
 
 	first_frame = True		# Mystery bug: game won't work without this
 	score = 0
-	time = 0
+	game_time = 0
 	game_over = False
 
 	# 3-2-1 countdown sequence. ------------------ ---------
@@ -238,10 +258,6 @@ def start_game():
 			if not hasattr(event, 'key'): continue
 			down = event.type == KEYDOWN
 
-			if TWO_PLAYER:
-				if event.key == K_w: ball2.k_up = down * -1
-				elif event.key == K_s: ball2.k_down = down * 1
-
 			if event.key == K_UP: ball.k_up = down * -1
 			elif event.key == K_DOWN: ball.k_down = down * 1		
 			elif event.key == K_ESCAPE: 
@@ -256,8 +272,8 @@ def start_game():
 											
 		bar_group.update(hits)			 
 
-		if bool(ball_group): time += 1  # If at least one ball is still in play
-		score =  (time - 170) / 50		# Calculating score based on time  
+		if bool(ball_group): game_time += 1  # If at least one ball is still in play
+		score =  (game_time - 170) / 50		# Calculating score based on time  
 		if score < 0: score = 0			# score can't be negative
 		
 		if ball.alive() and not ball2.alive() and winner == 0:
@@ -279,11 +295,11 @@ def start_game():
 		screen.blit(background, (0,0))					    # clear screen
 
 		if bool(ball):								# update only if the player still exists
-			ball.update(deltat, screen, time)
+			ball.update(deltat, screen, game_time)
 #			ball.draw(screen)
 
 		if  bool(ball2):								#  Update ball if player 2 is not dead
-			ball2.update(deltat, screen, time, y_coord)
+			ball2.update(deltat, screen, game_time, y_coord)
 #			ball2.draw()
 
 		bar_group.draw(screen)								# render bars
