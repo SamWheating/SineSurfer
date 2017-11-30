@@ -143,30 +143,6 @@ class BarSprite(pygame.sprite.Sprite):			# obstacles.
 
 
 def start_game():
-
-	
-	# Latency measurement: --------------------- ping and wait for reply
-	s.setblocking(0)
-	sleep(5)
-	start_time = time()
-	s.send(("Ping requested").encode('utf-8'))  
-	while(True):
-
-		try:
-			reply = s.recv(4096)
-		except:
-			reply = " "
-
-		if len(str(reply)) > 10:
-			end_time = time()
-			break
-
-	s.setblocking(1)
-
-	ping = end_time - start_time
-
-	print("Ping is {}ms".format(ping))
-
 	
 	while(True):
 		seed = s.recv(4096)

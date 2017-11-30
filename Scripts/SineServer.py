@@ -86,7 +86,7 @@ Ping recieved from client, immeadiately replied.
 Measure on client side to approximate p2 position delay.
 
 """
-
+"""
 print("measuring latency (ms)")
 
 num_pings = 0
@@ -109,6 +109,7 @@ while(True):
 
 
 s.setblocking(1)
+"""
 
 sleep(1)
 
