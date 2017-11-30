@@ -72,8 +72,9 @@ class BallSprite(pygame.sprite.Sprite):
 		x, y = self.position
 
 		if(online_pos != None):
-			if(math.fabs(online_pos) < 9000): 		# filter erroneous positions, will maintain previous value of y
-				y = online_pos
+			if(math.fabs(online_pos) < 9000):
+				if online_pos > 0: 		# filter erroneous positions, will maintain previous value of y
+					y = online_pos
 		
 		else:
 			x, y = self.position
@@ -142,7 +143,7 @@ class BarSprite(pygame.sprite.Sprite):			# obstacles.
 # ----------------------------------------------------------------
 
 
-def start_game():
+def start_game():	
 	
 	while(True):
 		seed = s.recv(4096)
