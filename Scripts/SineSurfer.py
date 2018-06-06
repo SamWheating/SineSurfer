@@ -4,9 +4,8 @@ SineSurfer!
 
 ---------
 
-Game made for CENG356 - Engineering System Software
-Uses Pygame fo rgame logic + rendering, sockets for network communications.
-Launch SineServer.py before launching instances of SineSurfer.py
+Local Version!
+Made by Sam Wheating
 
 """
 
@@ -26,7 +25,11 @@ pygame.init()
 screen = pygame.display.set_mode((1000, 600))
 clock = pygame.time.Clock()
 font = pygame.font.SysFont("comicsansms", 40)
-TWO_PLAYER = True
+
+if sys.argv[1] == "two_player":
+	TWO_PLAYER = True
+
+else: TWO_PLAYER = False
 
 #-------------------------------------------
 
@@ -135,7 +138,10 @@ def start_game():
 	if TWO_PLAYER: 
 		ball2 = BallSprite('sprites/ball2.png', (300, 350))
 
-	ball_group = pygame.sprite.RenderPlain(ball, ball2)
+	if TWO_PLAYER:
+		ball_group = pygame.sprite.RenderPlain(ball, ball2)
+	else:
+		ball_group = pygame.sprite.RenderPlain(ball)
 	background = pygame.image.load('sprites/background.png')
 	screen.blit(background, (0,0))
 
@@ -193,8 +199,8 @@ def start_game():
 
 		first_frame = False
 
-		
-start_game()	
+
+if __name__ == "__main__": start_game()	
 		
 		
 		

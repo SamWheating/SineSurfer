@@ -221,7 +221,7 @@ def start_game():
 
 	while True:
 
-		deltat = clock.tick(30)
+		deltat = clock.tick(20)
 
 		# get player 2's position.
 
@@ -288,8 +288,8 @@ def start_game():
 		first_frame = False
 
 
-		
-start_game()	
+if __name__ == "__main__": 
+	start_game()	
 		
 		
 		

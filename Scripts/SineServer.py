@@ -9,8 +9,7 @@ Will interact with SineSurfer.py.
 
 ---------
 
-Game made for CENG356 - Engineering System Software
-Uses Pygame fo rgame logic + rendering, sockets for network communications.
+Uses Pygame for game logic + rendering, sockets for network communications.
 Launch SineServer.py before launching instances of SineSurfer.py
 
 ---------
@@ -27,17 +26,9 @@ While(at least one player lives):
 	Trade location data for P1 and P2. (y coord and t)						yes.
 
 Once both players have lost:
-	Send message ((PLayer x won!))											yes.
-
--------------
-
-Current issues: 
-
-Broken pipe error when sending player position client -> server. 
-problem is in socket configurtion most likely. 
+	Send message ((Player x won!))											yes.
 
 """
-
 
 
 from socket import *
@@ -80,40 +71,8 @@ while(True):
 
 print("connected to two sockets")
 
-""" Measuring latency: ----------------------
-
-Ping recieved from client, immeadiately replied.
-Measure on client side to approximate p2 position delay.
-
-"""
-"""
-print("measuring latency (ms)")
-
-num_pings = 0
-
-s.setblocking(0) 
-
-while(True):
-	p1_message = player1.recv(4096)
-	p2_message = player2.recv(4096)
-
-	if len(str(p1_message)) > 10 is not None:
-			player1.send(("Ping response").encode('utf-8'))
-			num_pings += 1
-
-	if len((p2_message)) > 10:
-			player2.send(("Ping response").encode('utf-8'))
-			num_pings += 1
-
-	if num_pings == 2: break
-
-
-s.setblocking(1)
-"""
 
 sleep(1)
-
-
 
 # Seeding random number generators -----------------------------
 
@@ -158,12 +117,12 @@ while(True):
 		p1_pos = int(p1_pos)
 
 	except:
-		p1_pos = 9000
+		p1_pos = 9000 # cheap way of removing player from the screen
 
 	try: 
 		p2_pos = int(p2_pos)
 	except:
-		p2_pos = 9000			# ignore value
+		p2_pos = 9000	# ignore value
 
 	# Send player positions if valid.
 
@@ -172,7 +131,6 @@ while(True):
 
 	if(p2_pos != 9000):
 		player1.send(str(p2_pos).encode('utf-8'))
-
 
 
 player1.close()
