@@ -26,10 +26,13 @@ screen = pygame.display.set_mode((1000, 600))
 clock = pygame.time.Clock()
 font = pygame.font.SysFont("comicsansms", 40)
 
-if sys.argv[1] == "two_player":
-	TWO_PLAYER = True
+TWO_PLAYER = False
 
-else: TWO_PLAYER = False
+try:
+	if sys.argv[1] == "two_player":
+		TWO_PLAYER = True
+except:
+	pass
 
 #-------------------------------------------
 
